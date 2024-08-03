@@ -1,0 +1,21 @@
+{
+  "name": "youtube-clone-backend",
+  "version": "1.0.0",
+  "description": "Creating a backend for Youtube Clone",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"This is uttam makwana\" && exit 1"
+  },
+  "keywords": [
+    "Youtube",
+    "Clone",
+    "JavaScript",
+    "Backend",
+    "Express",
+    "Js",
+    "Node",
+    "Js"
+  ],
+  "author": "Uttam Makwana",
+  "license": "ISC"
+}
