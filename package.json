@@ -3,18 +3,19 @@
   "version": "1.0.0",
   "description": "Creating a backend for Youtube Clone",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"This is uttam makwana\" && exit 1"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
-    "Youtube",
-    "Clone",
-    "JavaScript",
+    "Youtube Clone",
+    "Express JS",
+    "Node JS",
+    "MongoDB",
+    "mongoose",
     "Backend",
-    "Express",
-    "Js",
-    "Node",
-    "Js"
+    "JavaScript"
   ],
   "author": "Uttam Makwana",
   "license": "ISC"
