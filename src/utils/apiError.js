@@ -1,3 +1,4 @@
+//? boilerplate for API Error
 export class ApiError extends Error {
   constructor(
     statusCode,
