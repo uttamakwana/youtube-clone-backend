@@ -130,7 +130,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
 });
 
 // POST
-// route: /api/v1/user/refreshAccessToken
+// route: /api/v1/user/refresh-access-token
 // does: if user doesn't have access token (if expired) then with the help of refresh token user can create new access token with the help of refresh token which is stored in database
 export const refreshAccessToken = asyncHandler(async (req, res) => {
   // 1. get the token
@@ -175,4 +175,128 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (error) {
     throw new ApiError(401, "Failed refreshing access token!");
   }
+});
+
+// PUT
+// route: /api/v1/user/change-password
+export const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (isEmpty(oldPassword, newPassword)) {
+    throw new ApiError(401, "Old password and new password are required!");
+  }
+  if (oldPassword === newPassword) {
+    throw new ApiError(400, "Try setting different password!");
+  }
+  const user = await User.findById(req.user?._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found!");
+  }
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password!");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Password updated successfully!", {}));
+});
+
+// GET
+// route: /api/v1/user/
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "User fetched successfully!", { user: req.user })
+    );
+});
+
+// PUT
+// route: /api/v1/user/update-user-info
+export const updateUserInfo = asyncHandler(async (req, res) => {
+  const { fullName, username, email } = req.body;
+
+  if (!fullName && !username && !email) {
+    throw new ApiError(400, "Give a field to update!");
+  }
+
+  const objectData = {};
+  if (fullName) objectData.fullName = fullName;
+  if (username) objectData.username = username;
+  if (email) objectData.email = email;
+
+  let user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  if (user) {
+    throw new ApiError(400, "Already taken!");
+  }
+
+  user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: objectData,
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User updated successfully!", { user }));
+});
+
+// PUT
+// route: /api/v1/user/update-avatar
+export const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalFilePath = req.file?.path;
+
+  if (!avatarLocalFilePath) {
+    throw new ApiError(400, "Invalid avatar file path!");
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalFilePath);
+
+  if (!avatar.url) {
+    throw new ApiError(400, "Failed uploading avatar!");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: { avatar: avatar.url } },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(202)
+    .json(new ApiResponse(202, "Avatar updated successfully!", { user }));
+});
+
+// PUT
+// route: /api/v1/user/update-cover-image
+export const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalFilePath = req.file?.path;
+
+  if (!coverImageLocalFilePath) {
+    throw new ApiError(400, "Invalid avatar file path!");
+  }
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalFilePath);
+
+  if (!coverImage.url) {
+    throw new ApiError(400, "Failed uploading Cover Image!");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: { coverImage: coverImage.url } },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(202)
+    .json(new ApiResponse(202, "Cover Image updated successfully!", { user }));
 });

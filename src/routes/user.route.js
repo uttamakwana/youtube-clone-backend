@@ -1,10 +1,15 @@
 import { Router } from "express";
 // controllers
 import {
+  changePassword,
+  getCurrentUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   registerUser,
+  updateUserAvatar,
+  updateUserCoverImage,
+  updateUserInfo,
 } from "../controllers/user.controller.js";
 // middlewares
 import { upload } from "../middlewares/multer.middleware.js";
@@ -29,3 +34,12 @@ userRouter.route("/login").post(loginUser);
 // does: handle user logout route
 userRouter.route("/logout").post(isAuth, logoutUser);
 userRouter.route("/refresh-access-token").post(refreshAccessToken);
+userRouter.route("/change-password").put(isAuth, changePassword);
+userRouter.route("/").get(isAuth, getCurrentUser);
+userRouter.route("/update-user-info").put(isAuth, updateUserInfo);
+userRouter
+  .route("/update-avatar")
+  .put(isAuth, upload.single("avatar"), updateUserAvatar);
+userRouter
+  .route("/update-cover-image")
+  .put(isAuth, upload.single("coverImage"), updateUserCoverImage);
