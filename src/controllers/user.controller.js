@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { generateTokens } from "../utils/generateToken.js";
 import { cookieOptions } from "../constants.js";
+import mongoose from "mongoose";
 
 // POST
 // route: /api/v1/user/register
@@ -306,4 +307,131 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
   return res
     .status(202)
     .json(new ApiResponse(202, "Cover Image updated successfully!", { user }));
+});
+
+// GET
+// route: /api/v1/user/:channelUsername
+export const getChannelInfo = asyncHandler(async (req, res) => {
+  const { channelUsername } = req.params;
+
+  if (!channelUsername?.trim()) {
+    throw new ApiError(400, "Channel username is required!");
+  }
+
+  let channel = await User.findOne({ username: channelUsername });
+  if (!channel) {
+    throw new ApiError(400, "Channel not found!");
+  }
+
+  channel = User.aggregate([
+    // find out the channel with it's username
+    {
+      $match: {
+        username: channelUsername.toLowerCase(),
+      },
+    },
+    // find out the number of subscribers of that channel from subscriptions model
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    // add the above field subscriber count in the channel information
+    {
+      $addFields: {
+        subscriberCount: {
+          $size: "$subscribers",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    // only give the necessary information required to show in the channel profile
+    {
+      $project: {
+        fullName: 1,
+        email: 1,
+        username: 1,
+        subscriberCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+
+  if (!channel.length) {
+    throw new ApiError(400, "Channel data is not available!");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Channel data retrieved successfully!", {
+      channel: channel[0],
+    })
+  );
+});
+
+// GET
+// route: /api/v1/user/history
+export const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  if (!user) {
+    throw new ApiError(400, "No watch history available!");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Watch history retrieved successfully!", {
+      watchHistory: user[0]?.watchHistory,
+    })
+  );
 });

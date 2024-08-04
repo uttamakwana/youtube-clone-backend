@@ -2,7 +2,9 @@ import { Router } from "express";
 // controllers
 import {
   changePassword,
+  getChannelInfo,
   getCurrentUser,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -43,3 +45,5 @@ userRouter
 userRouter
   .route("/update-cover-image")
   .put(isAuth, upload.single("coverImage"), updateUserCoverImage);
+userRouter.route("/:channelUsername").get(isAuth, getChannelInfo);
+userRouter.route("/history").get(isAuth, getWatchHistory);
