@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { isEmpty } from "../utils/validation.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { generateTokens } from "../utils/generateToken.js";
 import { cookieOptions } from "../constants.js";
 
@@ -253,18 +253,21 @@ export const updateUserInfo = asyncHandler(async (req, res) => {
 // route: /api/v1/user/update-avatar
 export const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalFilePath = req.file?.path;
-
   if (!avatarLocalFilePath) {
     throw new ApiError(400, "Invalid avatar file path!");
   }
 
-  const avatar = await uploadOnCloudinary(avatarLocalFilePath);
+  let user = await User.findById(req.user?._id);
+  if (user.avatar) {
+    await deleteOnCloudinary(user.avatar);
+  }
 
+  const avatar = await uploadOnCloudinary(avatarLocalFilePath);
   if (!avatar.url) {
     throw new ApiError(400, "Failed uploading avatar!");
   }
 
-  const user = await User.findByIdAndUpdate(
+  user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { avatar: avatar.url } },
     { new: true }
@@ -279,18 +282,22 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
 // route: /api/v1/user/update-cover-image
 export const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalFilePath = req.file?.path;
-
+  console.log(coverImageLocalFilePath);
   if (!coverImageLocalFilePath) {
     throw new ApiError(400, "Invalid avatar file path!");
   }
 
-  const coverImage = await uploadOnCloudinary(coverImageLocalFilePath);
+  let user = await User.findById(req.user?._id);
+  if (user.coverImage) {
+    await deleteOnCloudinary(user.coverImage);
+  }
 
+  const coverImage = await uploadOnCloudinary(coverImageLocalFilePath);
   if (!coverImage.url) {
     throw new ApiError(400, "Failed uploading Cover Image!");
   }
 
-  const user = await User.findByIdAndUpdate(
+  user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { coverImage: coverImage.url } },
     { new: true }

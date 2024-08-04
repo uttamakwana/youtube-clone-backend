@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import { ApiError } from "./apiError.js";
 
 // Configuration
 // TODO: apply process.env to configuration
@@ -24,4 +25,24 @@ export const uploadOnCloudinary = async (localFilePath) => {
     fs.unlinkSync(localFilePath);
     return null;
   }
+};
+
+// does: delete the file on cloudinary
+export const deleteOnCloudinary = async (cloudinaryUrl) => {
+  try {
+    if (!cloudinaryUrl)
+      throw new ApiError(400, "Couldn't find out cloudinary URL");
+    const cloudinaryUrlPublicId = getPublicIdFromUrl(cloudinaryUrl);
+    await cloudinary.uploader.destroy(cloudinaryUrlPublicId);
+  } catch (error) {
+    throw new ApiError(400, "Couldn't delete cloudinary image");
+  }
+};
+
+// Helper function to extract public ID from Cloudinary URL
+const getPublicIdFromUrl = (url) => {
+  const parts = url.split("/");
+  const fileName = parts[parts.length - 1];
+  const publicId = fileName.split(".")[0]; // Remove file extension
+  return publicId;
 };
