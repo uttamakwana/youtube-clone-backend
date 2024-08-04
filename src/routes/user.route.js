@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   loginUser,
   logoutUser,
+  refreshAccessToken,
   registerUser,
 } from "../controllers/user.controller.js";
 // middlewares
@@ -27,3 +28,4 @@ userRouter.route("/login").post(loginUser);
 //? secured routes
 // does: handle user logout route
 userRouter.route("/logout").post(isAuth, logoutUser);
+userRouter.route("/refresh-access-token").post(refreshAccessToken);
