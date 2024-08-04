@@ -2,10 +2,11 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
 // Configuration
+// TODO: apply process.env to configuration
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_API_CLOUDNAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: "dqpnkwk97",
+  api_key: "852461792895258",
+  api_secret: "b_lflbpRWgSeeqBZ0U-9jifsCic",
 });
 
 // does: upload the file on cloudinary cloud
@@ -15,11 +16,11 @@ export const uploadOnCloudinary = async (localFilePath) => {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
-    console.log("File uploaded successfully!");
-    console.log("Cloudinary URL", response.url);
+    fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
     // remove file stored in temporary folder as cloudinary upload failed!
+    console.error("Cloudinary Error:", error);
     fs.unlinkSync(localFilePath);
     return null;
   }

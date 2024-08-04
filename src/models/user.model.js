@@ -1,8 +1,8 @@
-import { Schema, models } from "mongoose";
+import { model, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 // constants
-import { BCRYPT_SALTS_ROUNDS } from "../constants";
+import { BCRYPT_SALTS_ROUNDS } from "../constants.js";
 
 // user schema
 const UserSchema = new Schema(
@@ -86,7 +86,7 @@ UserSchema.methods.generateAccessToken = function () {
   );
 };
 // does: generate refresh token for user
-UserSchema.methods.refreshAccessToken = function () {
+UserSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -98,4 +98,4 @@ UserSchema.methods.refreshAccessToken = function () {
   );
 };
 // user model
-export const User = models("User", UserSchema);
+export const User = model("User", UserSchema);
